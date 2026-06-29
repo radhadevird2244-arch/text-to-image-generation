@@ -1,5 +1,7 @@
+step 1:
 !pip install -q diffusers transformers accelerate torch safetensors
 
+step 2:
 import torch
 from diffusers import StableDiffusionXLPipeline
 
@@ -15,6 +17,7 @@ pipe = StableDiffusionXLPipeline.from_pretrained(
     use_safetensors=True
 )
 
+Step 3:
 pipe = pipe.to(device)
 
 prompt = input("Enter your prompt: ")
