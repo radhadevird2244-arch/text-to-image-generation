@@ -1,34 +1,59 @@
-step 1:
-!pip install -q diffusers transformers accelerate torch safetensors
+Cell 1: Install Dependencies
+!pip -q install diffusers transformers accelerate safetensors xformers
 
-step 2:
+
+Cell 2: Load the Model (Run Once)
 import torch
-from diffusers import StableDiffusionXLPipeline
-
-MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0"
+import time
+from diffusers import AutoPipelineForText2Image
+from IPython.display import display
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+print("Using Device:", device)
 
-print(f"Using device: {device}")
+MODEL_ID = "stabilityai/sdxl-turbo"
 
-pipe = StableDiffusionXLPipeline.from_pretrained(
+pipe = AutoPipelineForText2Image.from_pretrained(
     MODEL_ID,
     torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-    use_safetensors=True
+    variant="fp16" if device == "cuda" else None
 )
 
-Step 3:
 pipe = pipe.to(device)
 
+# Speed Optimizations
+pipe.enable_attention_slicing()
+pipe.enable_vae_slicing()
+
+if device == "cuda":
+    torch.backends.cuda.matmul.allow_tf32 = True
+
+print(" Model Loaded Successfully!")
+
+
+Cell 3: Generate Image
 prompt = input("Enter your prompt: ")
+
+start = time.time()
 
 image = pipe(
     prompt=prompt,
-    num_inference_steps=30,
-    guidance_scale=7.5
+    num_inference_steps=4,     # SDXL Turbo works best with 1-4 steps
+    guidance_scale=0.0,
+    height=1024,
+    width=1024
 ).images[0]
 
-output_file = "generated_image.png"
-image.save(output_file)
+end = time.time()
 
-print(f"Image saved as {output_file}")
+filename = "generated_image.png"
+image.save(filename)
+
+display(image)
+
+print(f"\n✅ Image saved as: {filename}")
+print(f"⚡ Generation Time: {end-start:.2f} seconds")
+
+
+Example Prompt
+A futuristic cyberpunk city at night, neon lights, ultra realistic, cinematic lighting, masterpiece, highly detailed, 8k
